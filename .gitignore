@@ -58,10 +58,7 @@ credentials*.json
 docs/
 .planning/
 
-# Firebase deploy config (Snack não precisa)
+# Firestore rules / indexes (Snack trata como asset)
 firebase.json
 firestore.indexes.json
 firestore.rules
-
-# Exemplo de env (Snack usa Secrets, não arquivo)
-.env.example
