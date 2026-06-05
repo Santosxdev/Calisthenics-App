@@ -51,17 +51,17 @@ export default function ProfileScreen({ navigation }) {
   const [showNameModal, setNameModal] = useState(false);
   const [newName, setNewName] = useState('');
 
-  if (!user) return null;
-
-  const { level } = calculateLevel(user.xp);
-  const routine = getRoutineById(user.routine);
-
-  // Memoiza lista de rotinas para evitar recálculo no render
+  // Memoiza lista de rotinas para evitar recálculo no render (antes do early return)
   const routines = useMemo(() => (
     ['ppl', 'ul', 'ppl_up', 'arnold']
       .map(getRoutineById)
       .filter(Boolean)
   ), []);
+
+  if (!user) return null;
+
+  const { level } = calculateLevel(user.xp);
+  const routine = getRoutineById(user.routine);
 
   function handleChangeRoutine(newId) {
     dispatch({ type: 'UPDATE_USER', payload: { routine: newId } });

@@ -47,13 +47,15 @@ export default function PreferencesScreen({ navigation }) {
   const [goal, setGoal] = useState(user?.preferences?.goal || '');
   const [level, setLevel] = useState(user?.preferences?.level || '');
 
+  const prefsGoal = user?.preferences?.goal;
+  const prefsLevel = user?.preferences?.level;
+
   // Se o usuário já tem preferências definidas, pula esta tela
-  // Isso acontece quando um usuário existente faz login em outro dispositivo
   useEffect(() => {
-    if (user?.preferences?.goal && user?.preferences?.level) {
+    if (prefsGoal && prefsLevel) {
       navigation.replace('MainTabs');
     }
-  }, []);
+  }, [navigation, prefsGoal, prefsLevel]);
 
   const suggestedRoutine = goal && level ? suggestRoutine(goal, level) : null;
 
