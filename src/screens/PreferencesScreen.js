@@ -1,18 +1,24 @@
 // screens/PreferencesScreen.js
-// Segunda tela (só na primeira vez). Usuário define:
-// - Objetivo (Força, Hipertrofia, Resistência, Geral)
-// - Nível (Iniciante, Intermediário, Avançado)
-// A rotina é sugerida automaticamente baseada na combinação.
-// O timer de descanso nos treinos será baseado no objetivo escolhido.
+// Tela de configuração inicial de objetivo e nível.
+// Aparece apenas na primeira vez que o usuário acessa o app logado.
+//
+// FLUXO COM AUTENTICAÇÃO:
+// 1. AppContext carrega dados do usuário (local + nuvem)
+// 2. Se goal e level já estiverem definidos → redireciona direto para MainTabs
+// 3. Se vazios → exibe esta tela para o usuário configurar
+// 4. Ao salvar → dispatch SET_USER + AsyncStorage + Firestore (via AppContext sync)
+//
+// O dispatch dispara o efeito de sincronização no AppContext, que salva
+// automaticamente no AsyncStorage e no Firestore em background.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useApp } from '../context/AppContext';
 import PreferenceCard from '../components/PreferenceCard';
 import { suggestRoutine } from '../data/routines';
 import { saveData } from '../services/storage';
 
-// Cards de objetivo com seus parâmetros científicos
+// Cards de objetivo com seus parâmetros científicos (ACSM, NSCA, Schoenfeld)
 const GOALS = [
   { id: 'strength', icon: '💪', title: 'Força', desc: '5-8 reps · Descanso 2-5min' },
   { id: 'hypertrophy', icon: '🔱', title: 'Hipertrofia', desc: '8-15 reps · Descanso 60-90s' },
@@ -36,18 +42,29 @@ const ROUTINE_NAMES = {
 
 export default function PreferencesScreen({ navigation }) {
   const { state, dispatch } = useApp();
-  const [goal, setGoal] = useState('');
-  const [level, setLevel] = useState('');
+  const { user } = state;
+  // Inicializa com as preferências já salvas (se existirem)
+  const [goal, setGoal] = useState(user?.preferences?.goal || '');
+  const [level, setLevel] = useState(user?.preferences?.level || '');
+
+  // Se o usuário já tem preferências definidas, pula esta tela
+  // Isso acontece quando um usuário existente faz login em outro dispositivo
+  useEffect(() => {
+    if (user?.preferences?.goal && user?.preferences?.level) {
+      navigation.replace('MainTabs');
+    }
+  }, []);
 
   const suggestedRoutine = goal && level ? suggestRoutine(goal, level) : null;
 
+  // Salva preferências e navega para as abas principais
   async function handleStart() {
     if (!goal || !level) return;
 
     const routine = suggestRoutine(goal, level);
     const updatedUser = {
-      ...state.user,
-      name: state.user?.name || 'Usuário',
+      ...user,
+      name: user?.name || 'Usuário',
       preferences: { goal, level },
       routine,
       level: 1,

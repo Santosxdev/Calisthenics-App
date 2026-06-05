@@ -1,13 +1,59 @@
+# Dependências
 node_modules/
+
+# Expo
 .expo/
 dist/
-npm-debug.*
+web-build/
+
+# Android / React Native
+.gradle/
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
-web-build/
+android/app/build/
+android/.gradle/
+ios/Pods/
+ios/build/
+
+# IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs e debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+*.tsbuildinfo
+
+# Ambiente e secrets
 .env
 .env.local
+.env.production
+.env.staging
+.env.development
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+service_account*.json
+credentials*.json
+
+# Build
+*.jsbundle
+*.jsbundle.map
+
+# Documentação de design
+docs/
+.planning/

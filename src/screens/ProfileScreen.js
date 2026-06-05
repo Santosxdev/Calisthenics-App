@@ -1,17 +1,28 @@
 // screens/ProfileScreen.js
-// Tela de perfil e configurações. Permite:
-// - Visualizar e alterar nome
-// - Ver preferências atuais (objetivo + nível)
-// - Trocar de rotina
-// - Ver agenda semanal
-// - Reconfigurar preferências
-// - Resetar todos os dados
+// Tela de perfil e configurações do usuário autenticado.
+//
+// FUNCIONALIDADES:
+// - Exibir nome, email (do Firebase Auth) e nível
+// - Alterar nome (dispatch UPDATE_USER → sync automático)
+// - Ver preferências atuais (objetivo + nível) — somente leitura
+// - Trocar de rotina (modal com RoutineSelector)
+// - Ver agenda semanal (WeekCalendar)
+// - Reconfigurar preferências (volta para PreferencesScreen)
+// - Sair (limpa AsyncStorage + Firebase Auth signOut)
+// - Resetar dados (limpa AsyncStorage + Firestore + signOut)
+//
+// NOTA SOBRE "SAIR" vs "RESETAR":
+// - Sair: mantém os dados no Firestore, apenas desloga
+// - Resetar: deleta o documento do Firestore e desloga
+// Ambos limpam o AsyncStorage local.
 
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput,
 } from 'react-native';
 import { useApp } from '../context/AppContext';
+import { logout } from '../services/authService';
+import { deleteUserData } from '../services/firestoreService';
 import RoutineSelector from '../components/RoutineSelector';
 import WeekCalendar from '../components/WeekCalendar';
 import { getRoutineById } from '../data/routines';
@@ -33,7 +44,7 @@ const LEVEL_MAP = {
 
 export default function ProfileScreen({ navigation }) {
   const { state, dispatch } = useApp();
-  const { user, sessions } = state;
+  const { user, sessions, authUser } = state;
 
   const [showRoutineModal, setShowRoutineModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -57,12 +68,27 @@ export default function ProfileScreen({ navigation }) {
     setShowRoutineModal(false);
   }
 
-  async function handleReset() {
+  // Sair: limpa apenas o AsyncStorage e desloga.
+  // Dados no Firestore permanecem para próximo login.
+  async function handleLogout() {
     await resetAll();
     dispatch({ type: 'SET_USER', payload: null });
     dispatch({ type: 'SET_SESSIONS', payload: [] });
     dispatch({ type: 'SET_ACHIEVEMENTS', payload: [] });
-    navigation.replace('Login');
+    await logout();
+  }
+
+  // Resetar: apaga AsyncStorage + Firestore + desloga.
+  // Equivalente a "deletar conta".
+  async function handleReset() {
+    await resetAll();
+    if (authUser?.uid) {
+      await deleteUserData(authUser.uid).catch(() => {});
+    }
+    dispatch({ type: 'SET_USER', payload: null });
+    dispatch({ type: 'SET_SESSIONS', payload: [] });
+    dispatch({ type: 'SET_ACHIEVEMENTS', payload: [] });
+    await logout();
   }
 
   function handleChangeName() {
@@ -71,6 +97,7 @@ export default function ProfileScreen({ navigation }) {
     setNameModal(false);
   }
 
+  // Volta para PreferencesScreen (dentro do AppStack)
   function handleRedoPreferences() {
     navigation.navigate('Preferences');
   }
@@ -79,12 +106,15 @@ export default function ProfileScreen({ navigation }) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.header}>⚙️ Perfil</Text>
 
-      {/* Card do usuário */}
+      {/* Card do usuário com nome, email e nível */}
       <View style={styles.userCard}>
         <TouchableOpacity onPress={() => { setNewName(user.name); setNameModal(true); }}>
           <Text style={styles.userEmoji}>👤</Text>
         </TouchableOpacity>
         <Text style={styles.userName}>{user.name}</Text>
+        {authUser?.email ? (
+          <Text style={styles.emailText}>{authUser.email}</Text>
+        ) : null}
         <Text style={styles.userMeta}>
           Lv.{level} · {sessions.length} treinos
         </Text>
@@ -131,7 +161,7 @@ export default function ProfileScreen({ navigation }) {
         {routine && <WeekCalendar routine={routine} />}
       </View>
 
-      {/* Ações */}
+      {/* Ações: trocar rotina, redefinir preferências, sair, resetar dados */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Ações</Text>
         <TouchableOpacity
@@ -142,6 +172,12 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn} onPress={handleRedoPreferences}>
           <Text style={styles.actionBtnText}>Redefinir Preferências</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={handleLogout}
+        >
+          <Text style={styles.actionBtnText}>Sair</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, styles.dangerBtn]}
@@ -230,6 +266,7 @@ const styles = StyleSheet.create({
   userCard: { alignItems: 'center', backgroundColor: '#1e293b', borderRadius: 16, padding: 24, marginBottom: 20 },
   userEmoji: { fontSize: 48, marginBottom: 8 },
   userName: { color: '#f8fafc', fontSize: 22, fontWeight: '700' },
+  emailText: { color: '#6b7280', fontSize: 13, marginTop: 2 },
   userMeta: { color: '#6b7280', fontSize: 14, marginTop: 4 },
   section: { marginBottom: 20 },
   sectionTitle: { color: '#f8fafc', fontSize: 16, fontWeight: '600', marginBottom: 8 },

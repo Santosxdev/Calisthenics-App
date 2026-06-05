@@ -1,16 +1,26 @@
 // navigation/AppNavigator.js
-// Configuração de navegação do app:
-// - NativeStack para Login → Preferences → MainTabs
-// - BottomTab para Home, Treino, Progresso, Perfil
-// Ícones emoji para as abas (sem dependências de icon library)
+// Configuração de navegação com controle de autenticação.
+//
+// ESTRUTURA:
+// - authState === 'loading' → SplashScreen (tela de carregamento)
+// - authState === 'unauthenticated' → AuthStack (Login / Register)
+// - authState === 'authenticated' → AppStack (Preferences → MainTabs)
+//
+// AuthStack e AppStack são grupos de telas mutuamente exclusivos:
+// renderizados condicionalmente dentro do NavigationContainer.
+// Quando o authState muda, o React Navigation troca automaticamente
+// o conjunto de telas disponíveis.
 
 import React from 'react';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text as TabText } from 'react-native';
+import { useApp } from '../context/AppContext';
 
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import PreferencesScreen from '../screens/PreferencesScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ActiveWorkoutScreen from '../screens/ActiveWorkoutScreen';
@@ -20,7 +30,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Ícones das abas: versão ativa e inativa (mesmo emoji, sem dependência extra)
+// Mapa de ícones para cada aba (emoji, sem dependência externa)
 const TAB_ICONS = {
   Home: { active: '🏠', inactive: '🏡' },
   Treino: { active: '💪', inactive: '💪' },
@@ -32,13 +42,13 @@ function TabIcon({ routeName, focused }) {
   const icons = TAB_ICONS[routeName];
   if (!icons) return null;
   return (
-    <Text style={{ fontSize: 22 }}>
+    <TabText style={{ fontSize: 22 }}>
       {focused ? icons.active : icons.inactive}
-    </Text>
+    </TabText>
   );
 }
 
-// Bottom Tab Navigator com as 4 abas principais
+// Bottom Tab Navigator com as 4 abas principais do app logado
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -66,15 +76,62 @@ function MainTabs() {
   );
 }
 
-// Stack Navigator principal: Login → Preferences → MainTabs
+// Tela de splash exibida enquanto o Firebase Auth verifica a sessão
+function SplashScreen() {
+  return (
+    <View style={styles.splash}>
+      <Text style={styles.splashEmoji}>🏋️</Text>
+      <Text style={styles.splashTitle}>WORKOUT LOG</Text>
+      <ActivityIndicator size="large" color="#22c55e" style={{ marginTop: 24 }} />
+    </View>
+  );
+}
+
+// Grupo de telas para usuários NÃO autenticados
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Grupo de telas para usuários autenticados
+function AppStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Preferences" component={PreferencesScreen} />
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+    </Stack.Navigator>
+  );
+}
+
+// Componente raiz de navegação.
+// Lê authState do AppContext e renderiza o conjunto correto de telas.
+// Se authState ainda é 'loading', mostra SplashScreen fora do NavigationContainer.
 export default function AppNavigator() {
+  const { state } = useApp();
+  const { authState } = state;
+
+  if (authState === 'loading') {
+    return <SplashScreen />;
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Preferences" component={PreferencesScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-      </Stack.Navigator>
+      {authState === 'unauthenticated' ? <AuthStack /> : <AppStack />}
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  splashEmoji: { fontSize: 64, marginBottom: 16 },
+  splashTitle: { color: '#22c55e', fontSize: 28, fontWeight: '800', letterSpacing: 2 },
+});

@@ -1,53 +1,52 @@
 // screens/LoginScreen.js
-// Primeira tela do app. Usuário insere o nome para entrar.
-// Se já existir no AsyncStorage, vai direto para Home.
-// Se for novo usuário, redireciona para as preferências.
+// Tela de login com email e senha via Firebase Auth.
+// Ao logar com sucesso, o AppContext reage ao onAuthStateChanged e
+// o AppNavigator troca automaticamente para AppStack.
+//
+// FLUXO:
+// 1. Usuário digita email + senha
+// 2. Chama authService.login()
+// 3. Firebase Auth valida as credenciais
+// 4. onAuthStateChanged dispara no AppContext
+// 5. AppContext carrega dados e marca authState = 'authenticated'
+// 6. AppNavigator troca de AuthStack para AppStack
 
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
-import { useApp } from '../context/AppContext';
-import { loadData } from '../services/storage';
+import { login } from '../services/authService';
 
 export default function LoginScreen({ navigation }) {
-  const { dispatch } = useApp();
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Valida campos e tenta login no Firebase Auth
   async function handleLogin() {
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      setError('Nome deve ter ao menos 2 caracteres');
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !password) {
+      setError('Preencha email e senha');
       return;
     }
     setError('');
     setLoading(true);
 
     try {
-      const existing = await loadData('user');
-
-      if (existing) {
-        // Usuário existente: vai direto para Home
-        dispatch({ type: 'SET_USER', payload: existing });
-        navigation.replace('MainTabs');
-      } else {
-        // Novo usuário: cria registro básico e vai para preferências
-        const newUser = {
-          name: trimmed,
-          preferences: { goal: '', level: '' },
-          level: 1,
-          xp: 0,
-          streak: 0,
-          lastWorkoutDate: null,
-          routine: 'ppl',
-        };
-        dispatch({ type: 'SET_USER', payload: newUser });
-        navigation.replace('Preferences');
-      }
-    } catch {
-      setError('Erro ao acessar dados');
+      await login(trimmedEmail, password);
+      // Navegação é gerenciada automaticamente pelo AppNavigator via authState
+    } catch (e) {
+      // Mapeia códigos de erro do Firebase para mensagens em português
+      const msg =
+        e.code === 'auth/user-not-found' ? 'Usuário não encontrado' :
+        e.code === 'auth/wrong-password' ? 'Senha incorreta' :
+        e.code === 'auth/invalid-email' ? 'Email inválido' :
+        e.code === 'auth/invalid-credential' ? 'Email ou senha inválidos' :
+        e.code === 'auth/too-many-requests' ? 'Muitas tentativas. Tente novamente mais tarde' :
+        'Erro ao fazer login';
+      setError(msg);
     }
     setLoading(false);
   }
@@ -65,25 +64,48 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputBox}>
           <TextInput
             style={styles.input}
-            placeholder="Seu nome"
+            placeholder="Email"
             placeholderTextColor="#6b7280"
-            value={name}
-            onChangeText={(t) => { setName(t); setError(''); }}
-            autoCapitalize="words"
+            value={email}
+            onChangeText={(t) => { setEmail(t); setError(''); }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
+        </View>
+
+        <View style={styles.inputBox}>
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            placeholderTextColor="#6b7280"
+            value={password}
+            onChangeText={(t) => { setPassword(t); setError(''); }}
+            secureTextEntry
+            autoComplete="password"
           />
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <TouchableOpacity
-          style={[styles.button, (!name.trim() || loading) && styles.buttonDisabled]}
+          style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleLogin}
-          disabled={!name.trim() || loading}
+          disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Entrando...' : 'Entrar'}</Text>
+          {loading ? (
+            <ActivityIndicator color="#0f172a" />
+          ) : (
+            <Text style={styles.buttonText}>Entrar</Text>
+          )}
         </TouchableOpacity>
 
-        <Text style={styles.hint}>Digite seu nome para continuar</Text>
+        <TouchableOpacity
+          style={styles.linkBtn}
+          onPress={() => navigation.navigate('Register')}
+        >
+          <Text style={styles.linkText}>Criar conta</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -102,8 +124,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
   },
-  input: { color: '#f8fafc', fontSize: 18, paddingVertical: 14, textAlign: 'center' },
-  error: { color: '#ef4444', fontSize: 13, marginBottom: 8 },
+  input: { color: '#f8fafc', fontSize: 16, paddingVertical: 14 },
+  error: { color: '#ef4444', fontSize: 13, marginBottom: 8, textAlign: 'center' },
   button: {
     width: '100%',
     backgroundColor: '#22c55e',
@@ -113,6 +135,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#f8fafc', fontSize: 16, fontWeight: '700' },
-  hint: { color: '#6b7280', fontSize: 12, marginTop: 20 },
+  buttonText: { color: '#0f172a', fontSize: 16, fontWeight: '700' },
+  linkBtn: { marginTop: 20 },
+  linkText: { color: '#22c55e', fontSize: 14, fontWeight: '600' },
 });
