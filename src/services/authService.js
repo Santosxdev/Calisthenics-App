@@ -11,7 +11,7 @@ import { auth } from './firebase';
 export function register(email, password, name) {
   return auth.createUserWithEmailAndPassword(email, password)
     .then(async (cred) => {
-      await cred.user.updateProfile({ displayName: name });
+      if (name) await auth.updateProfile(name);
       return cred;
     });
 }

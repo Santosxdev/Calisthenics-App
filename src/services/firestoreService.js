@@ -4,8 +4,7 @@
 // Todas as funções são chamadas pelo AppContext (sync automático) ou diretamente
 // por telas específicas (ex: ActiveWorkoutScreen).
 
-import firebase from 'firebase';
-import { db } from './firebase';
+import { db, Timestamp } from './firebase';
 
 // ---- USUÁRIO ----
 
@@ -66,8 +65,8 @@ export function completeDay(uid, weekId, dayName) {
 export function addSession(uid, session) {
   return db.collection(`users/${uid}/sessions`).add({
     ...session,
-    date: session.date || firebase.firestore.Timestamp.now(),
-    createdAt: firebase.firestore.Timestamp.now(),
+    date: session.date || Timestamp.now(),
+    createdAt: Timestamp.now(),
   });
 }
 
@@ -80,8 +79,8 @@ export function replaceSessions(uid, sessions) {
     const ref = db.collection(`users/${uid}/sessions`).doc();
     batch.set(ref, {
       ...s,
-      date: s.date || firebase.firestore.Timestamp.now(),
-      createdAt: firebase.firestore.Timestamp.now(),
+      date: s.date || Timestamp.now(),
+      createdAt: Timestamp.now(),
     });
   });
   return batch.commit();
