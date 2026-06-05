@@ -1,36 +1,21 @@
 import firebase from 'firebase';
 
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: 'AIzaSyB-ITkEecVL8BKjUAf4lIqg8A3-M85_lPM',
+  authDomain: 'workout-log-5c16d.firebaseapp.com',
+  projectId: 'workout-log-5c16d',
+  storageBucket: 'workout-log-5c16d.firebasestorage.app',
+  messagingSenderId: '866302176002',
+  appId: '1:866302176002:web:ba20055b519ea3d604301b',
+  measurementId: 'G-ET8YP4WKLC',
 };
 
-const missing = Object.entries(firebaseConfig)
-  .filter(([, v]) => !v)
-  .map(([k]) => k);
-
-const hasConfig = missing.length === 0;
-
-if (!hasConfig) {
-  console.warn(
-    `[firebase] Variáveis de ambiente ausentes: ${missing.join(', ')}.\n` +
-    'Defina EXPO_PUBLIC_FIREBASE_* no .env ou nos Secrets do Snack.'
-  );
-}
-
-let auth = null;
-let db = null;
-
-if (hasConfig && !firebase.apps.length) {
+if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
-  auth = firebase.auth();
-  db = firebase.firestore();
 }
+
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 export { auth, db };
 export default firebase;
