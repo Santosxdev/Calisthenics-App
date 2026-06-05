@@ -61,7 +61,7 @@ Aplicativo mobile **React Native (Expo)** para registro de treinos de calistenia
 | RF-06 | O sistema deve exibir um calendário semanal com os treinos previstos da rotina atual | Home | Média |
 | RF-07 | O usuário deve visualizar os exercícios do treino do dia com número de séries | Treino Ativo | Alta |
 | RF-08 | O usuário deve registrar repetições e marcar séries como concluídas | Treino Ativo | Alta |
-| RF-09 | O sistema deve exibir um timer de descanso científico ajustado ao objetivo do usuário entre as séries | Treino Ativo | Alta |
+| RF-09 |   entre as séries | Treino Ativo | Alta |
 | RF-10 | O sistema deve exibir barra de progresso do treino em tempo real | Treino Ativo | Média |
 | RF-11 | O sistema deve calcular XP, atualizar streak e verificar achievements ao finalizar o treino | Treino Ativo | Alta |
 | RF-12 | O sistema deve exibir modal pós-treino com XP ganho, streak atual e novos achievements desbloqueados | Treino Ativo | Média |
