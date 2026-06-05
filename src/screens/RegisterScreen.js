@@ -63,7 +63,7 @@ export default function RegisterScreen({ navigation }) {
         e.code === 'auth/email-already-in-use' ? 'Email já cadastrado' :
         e.code === 'auth/invalid-email' ? 'Email inválido' :
         e.code === 'auth/weak-password' ? 'Senha muito fraca' :
-        'Erro ao criar conta';
+        `${e.message || e.code || 'Erro ao criar conta'}`;
       setError(msg);
     }
     setLoading(false);
