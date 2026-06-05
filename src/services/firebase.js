@@ -163,7 +163,7 @@ const authObj = {
 
   onAuthStateChanged(callback) {
     listeners.push(callback);
-    if (currentUser) callback(currentUser);
+    callback(currentUser);
     return () => {
       const idx = listeners.indexOf(callback);
       if (idx !== -1) listeners.splice(idx, 1);
