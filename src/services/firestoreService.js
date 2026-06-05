@@ -4,7 +4,7 @@
 // Todas as funções são chamadas pelo AppContext (sync automático) ou diretamente
 // por telas específicas (ex: ActiveWorkoutScreen).
 
-import firebase from 'firebase/compat/app';
+import firebase from 'firebase';
 import { db } from './firebase';
 
 // ---- USUÁRIO ----
