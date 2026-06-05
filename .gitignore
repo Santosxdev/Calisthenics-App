@@ -57,3 +57,11 @@ credentials*.json
 # Documentação de design
 docs/
 .planning/
+
+# Firebase deploy config (Snack não precisa)
+firebase.json
+firestore.indexes.json
+firestore.rules
+
+# Exemplo de env (Snack usa Secrets, não arquivo)
+.env.example
