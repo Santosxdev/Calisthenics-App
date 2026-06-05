@@ -11,6 +11,7 @@ const listeners = [];
 
 function notifyListeners(user) {
   listeners.forEach((cb) => {
+    // eslint-disable-next-line no-empty
     try { cb(user); } catch (_) {}
   });
 }
