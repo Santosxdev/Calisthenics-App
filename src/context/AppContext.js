@@ -82,7 +82,14 @@ export function AppProvider({ children }) {
   // Quando o Firebase Auth detecta mudança:
   //   - Se logado: carrega dados locais e da nuvem, faz merge, migra se necessário
   //   - Se deslogado: limpa estado, mostra tela de login
+  // Se Firebase não foi configurado (auth === null), pula direto para não-logado.
   useEffect(() => {
+    if (!auth) {
+      dispatch({ type: 'SET_AUTH_STATE', payload: 'unauthenticated' });
+      setHydrated(true);
+      return;
+    }
+
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         // Usuário logado: inicia carregamento dos dados

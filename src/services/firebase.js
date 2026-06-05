@@ -14,19 +14,23 @@ const missing = Object.entries(firebaseConfig)
   .filter(([, v]) => !v)
   .map(([k]) => k);
 
-if (missing.length > 0) {
+const hasConfig = missing.length === 0;
+
+if (!hasConfig) {
   console.warn(
     `[firebase] Variáveis de ambiente ausentes: ${missing.join(', ')}.\n` +
     'Defina EXPO_PUBLIC_FIREBASE_* no .env ou nos Secrets do Snack.'
   );
 }
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+let auth = null;
+let db = null;
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+if (hasConfig && !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+}
 
 export { auth, db };
 export default firebase;
