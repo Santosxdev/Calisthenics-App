@@ -23,7 +23,6 @@
 // - prevState ref evita ciclos e disparos duplicados
 
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { loadData, saveData } from '../services/storage';
 import { getRoutineById } from '../data/routines';
@@ -84,7 +83,7 @@ export function AppProvider({ children }) {
   //   - Se logado: carrega dados locais e da nuvem, faz merge, migra se necessário
   //   - Se deslogado: limpa estado, mostra tela de login
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         // Usuário logado: inicia carregamento dos dados
         dispatch({ type: 'SET_AUTH_USER', payload: firebaseUser });
