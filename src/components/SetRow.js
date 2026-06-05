@@ -1,47 +1,59 @@
-// components/RoutineSelector.js
-// Seletor de rotinas com cards verticais mostrando nome, descrição e frequência
-// Usado no onboarding e no perfil (trocar rotina)
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function RoutineSelector({ routines, selectedId, onSelect }) {
+export default function SetRow({ setIndex, reps, completed, onRepsChange, onToggle }) {
   return (
-    <View style={styles.container}>
-      {routines.map((r) => {
-        const selected = r.id === selectedId;
-        return (
-          <TouchableOpacity
-            key={r.id}
-            style={[styles.card, selected && styles.selected]}
-            onPress={() => onSelect(r.id)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.row}>
-              <Text style={[styles.name, selected && styles.nameSelected]}>{r.name}</Text>
-              <Text style={styles.freq}>{r.frequency}</Text>
-            </View>
-            <Text style={styles.desc}>{r.description}</Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.row, completed && styles.completed]}>
+      <Text style={styles.setLabel}>Série {setIndex + 1}</Text>
+      <TextInput
+        style={styles.input}
+        value={String(reps || '')}
+        onChangeText={onRepsChange}
+        keyboardType="number-pad"
+        placeholder="reps"
+        placeholderTextColor="#6b7280"
+        editable={!completed}
+      />
+      <TouchableOpacity
+        style={[styles.checkBtn, completed && styles.checkBtnDone]}
+        onPress={onToggle}
+      >
+        <Text style={styles.checkText}>{completed ? '✓' : '☐'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 8 },
-  card: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 2,
-    borderColor: 'transparent',
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0f172a',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 6,
+    gap: 8,
   },
-  selected: { borderColor: '#22c55e', backgroundColor: '#22c55e10' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { color: '#f8fafc', fontSize: 16, fontWeight: '600' },
-  nameSelected: { color: '#22c55e' },
-  freq: { color: '#22c55e', fontSize: 13, fontWeight: '500' },
-  desc: { color: '#6b7280', fontSize: 13, marginTop: 4 },
+  completed: { opacity: 0.6 },
+  setLabel: { color: '#6b7280', fontSize: 13, fontWeight: '600', width: 50 },
+  input: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    borderRadius: 6,
+    color: '#f8fafc',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  checkBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#374151',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkBtnDone: { backgroundColor: '#22c55e' },
+  checkText: { color: '#f8fafc', fontSize: 18, fontWeight: '700' },
 });

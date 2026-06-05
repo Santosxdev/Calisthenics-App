@@ -1,14 +1,8 @@
-// services/firebase.js
-// Inicialização do Firebase com persistência de autenticação para React Native.
-// Usa initializeAuth (em vez de getAuth) para configurar persistência via AsyncStorage,
-// garantindo que o usuário permaneça logado mesmo após fechar o app.
-
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 
-// Configuração carregada das variáveis de ambiente (EXPO_PUBLIC_*)
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -16,23 +10,26 @@ const firebaseConfig = {
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Evita inicializar múltiplas instâncias (segurança para hot-reload)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const missing = Object.entries(firebaseConfig)
+  .filter(([, v]) => !v)
+  .map(([k]) => k);
 
-// Tenta inicializar auth com persistência React Native (AsyncStorage).
-// O catch cobre o caso de já ter sido inicializado (ex: hot-reload no Expo).
-let auth;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} catch {
-  auth = getAuth(app);
+if (missing.length > 0) {
+  console.warn(
+    `[firebase] Variáveis de ambiente ausentes: ${missing.join(', ')}.\n` +
+    'Defina EXPO_PUBLIC_FIREBASE_* no .env ou nos Secrets do Snack.'
+  );
 }
 
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-export { auth, db };
+let analytics = null;
+isSupported().then((yes) => { if (yes) analytics = getAnalytics(app); });
+
+export { auth, db, analytics };
 export default app;

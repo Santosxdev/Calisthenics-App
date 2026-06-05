@@ -42,6 +42,7 @@ const EXERCISES = {
     { id: 'lower_lunge', name: 'Afundo', muscleGroup: 'Pernas' },
     { id: 'lower_bridge', name: 'Elevação Pélvica', muscleGroup: 'Glúteos' },
     { id: 'lower_calf', name: 'Panturrilha', muscleGroup: 'Panturrilhas' },
+    { id: 'lower_squat_jump', name: 'Agachamento com Salto', muscleGroup: 'Pernas' },
   ],
   chest_back: [
     { id: 'cb_push', name: 'Flexão', muscleGroup: 'Peito' },
